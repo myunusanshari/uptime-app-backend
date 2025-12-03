@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: uptime-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: uptime
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: uptime-api
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DB_URL: postgresql://admin:admin123@db:5432/uptime
+      FCM_SERVER_KEY: ${FCM_SERVER_KEY}
+    volumes:
+      - .:/app
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    ports:
+      - "8000:8000"
+
+volumes:
+  pgdata:
