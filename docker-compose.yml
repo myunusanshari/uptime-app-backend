@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin123
     ports:
-      - "5432:5432"
+      - "5433:543"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
@@ -21,7 +21,7 @@ services:
     depends_on:
       - db
     environment:
-      DB_URL: postgresql://admin:admin123@db:5432/uptime
+      DB_URL: postgresql://admin:admin123@db:543/uptime
       FCM_SERVER_KEY: ${FCM_SERVER_KEY}
     volumes:
       - .:/app
