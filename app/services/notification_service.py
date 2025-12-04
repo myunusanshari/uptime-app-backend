@@ -35,7 +35,7 @@ except Exception as e:
     logger.error(f"Error initializing Firebase: {e}")
 
 
-def send_fcm(to: str, title: str, body: str, sound="default", data=None):
+def send_fcm(to: str, title: str, body: str, sound="default", data=None, channel_id="default"):
     """Send a notification via Firebase Cloud Messaging.
 
     Args:
@@ -44,6 +44,7 @@ def send_fcm(to: str, title: str, body: str, sound="default", data=None):
         body: Notification body
         sound: Sound to play (default: "default")
         data: Additional data payload
+        channel_id: Android notification channel ID (default: "default")
     """
     if not firebase_initialized:
         logger.warning("Firebase Admin SDK not initialized; skipping push send")
@@ -73,6 +74,7 @@ def send_fcm(to: str, title: str, body: str, sound="default", data=None):
                     notification=messaging.AndroidNotification(
                         sound=sound,
                         priority='high',
+                        channel_id=channel_id,  # Required for custom sounds
                     )
                 ),
                 apns=messaging.APNSConfig(
@@ -97,6 +99,7 @@ def send_fcm(to: str, title: str, body: str, sound="default", data=None):
                     notification=messaging.AndroidNotification(
                         sound=sound,
                         priority='high',
+                        channel_id=channel_id,  # Required for custom sounds
                     )
                 ),
                 apns=messaging.APNSConfig(
@@ -122,7 +125,7 @@ def send_fcm(to: str, title: str, body: str, sound="default", data=None):
         return {"error": "failed_to_send", "details": str(exc)}
 
 
-def send_to_all_devices(devices, title: str, body: str, sound="default", data=None):
+def send_to_all_devices(devices, title: str, body: str, sound="default", data=None, channel_id="default"):
     """Send notification to all registered device tokens.
     
     Args:
@@ -131,6 +134,7 @@ def send_to_all_devices(devices, title: str, body: str, sound="default", data=No
         body: Notification body
         sound: Notification sound (default: "default")
         data: Optional data payload dict
+        channel_id: Android notification channel ID (default: "default")
         
     Returns:
         Dict with success/failure counts and results
@@ -149,7 +153,8 @@ def send_to_all_devices(devices, title: str, body: str, sound="default", data=No
                 title=title,
                 body=body,
                 sound=sound,
-                data=data
+                data=data,
+                channel_id=channel_id  # Pass channel_id to send_fcm
             )
             
             if result.get("error"):
