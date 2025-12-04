@@ -2,12 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..models.domain import Domain
 from ..models.device_token import DeviceToken
-from ..schemas.domain import DomainCreate, DomainOut
+from ..schemas.domain import DomainCreate, DomainOut, DomainUpdate
 from ..dependencies import get_db
 from ..services.ssl_service import get_ssl_certificate, should_alert_ssl_expiry, format_ssl_alert_message
 from ..services.notification_service import send_to_all_devices
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 @router.post("/", response_model=DomainOut)
 def create_domain(payload: DomainCreate, db: Session = Depends(get_db)):
@@ -48,14 +50,23 @@ def get_domain(domain_id: int, db: Session = Depends(get_db)):
 
 # Update domain
 @router.put("/{domain_id}", response_model=DomainOut)
-def update_domain(domain_id: int, payload: DomainCreate, db: Session = Depends(get_db)):
+def update_domain(domain_id: int, payload: DomainUpdate, db: Session = Depends(get_db)):
     domain = db.query(Domain).filter(Domain.id == domain_id).first()
     if not domain:
         raise HTTPException(status_code=404, detail="Domain not found")
+    
+    # Log the update payload
+    logger.info(f"🔄 Updating domain {domain_id} with payload: {payload.dict(exclude_unset=True)}")
+    
     for key, value in payload.dict(exclude_unset=True).items():
         setattr(domain, key, value)
+        logger.info(f"  ✏️ Set {key} = {value}")
+    
     db.commit()
     db.refresh(domain)
+    
+    logger.info(f"✅ Domain {domain_id} updated: custom_sound_down={domain.custom_sound_down}, custom_sound_up={domain.custom_sound_up}")
+    
     return domain
 
 # Delete domain

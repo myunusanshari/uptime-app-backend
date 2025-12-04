@@ -48,6 +48,7 @@ def domain_down(payload: DownEvent, db: Session = Depends(get_db)):
         
         # Use custom sound if specified, otherwise use default
         sound_name = domain.custom_sound_down or domain.custom_sound or "default_down"
+        logger.info(f"🔊 Using sound for DOWN notification: {sound_name} (custom_sound_down={domain.custom_sound_down}, custom_sound={domain.custom_sound})")
         
         notification_results = send_to_all_devices(
             devices=devices,
@@ -59,6 +60,7 @@ def domain_down(payload: DownEvent, db: Session = Depends(get_db)):
                 "type": "down",
                 "domain_name": domain_name,
                 "domain_label": domain_label,
+                "sound": sound_name,  # Add sound to data payload for frontend
                 "timestamp": payload.detected_at.isoformat()
             }
         )
@@ -141,6 +143,7 @@ def domain_up(payload: UpEvent, db: Session = Depends(get_db)):
         
         # Use custom sound if specified, otherwise use default
         sound_name = domain.custom_sound_up or domain.custom_sound or "default_up"
+        logger.info(f"🔊 Using sound for UP notification: {sound_name} (custom_sound_up={domain.custom_sound_up}, custom_sound={domain.custom_sound})")
         
         notification_results = send_to_all_devices(
             devices=devices,
@@ -154,6 +157,7 @@ def domain_up(payload: UpEvent, db: Session = Depends(get_db)):
                 "domain_label": domain_label,
                 "duration": str(duration_seconds),
                 "duration_formatted": duration_text,
+                "sound": sound_name,  # Add sound to data payload for frontend
                 "timestamp": payload.detected_at.isoformat()
             }
         )

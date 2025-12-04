@@ -13,6 +13,17 @@ class DomainBase(BaseModel):
 class DomainCreate(DomainBase):
     pass
 
+class DomainUpdate(BaseModel):
+    """Schema for updating a domain - all fields optional"""
+    name: str | None = None
+    label: str | None = None
+    custom_sound: str | None = None  # Deprecated
+    custom_sound_down: str | None = None
+    custom_sound_up: str | None = None
+    sensitivity: int | None = None
+    ssl_enabled: bool | None = None
+
+
 
 class DomainOut(DomainBase):
     id: int
