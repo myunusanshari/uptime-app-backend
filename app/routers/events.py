@@ -47,11 +47,11 @@ def domain_down(payload: DownEvent, db: Session = Depends(get_db)):
         # Send notification to all devices
         devices = db.query(DeviceToken).all()
         
-        # Use custom sound if specified, otherwise use default
-        # Normalize sound name (remove extension if present)
-        raw_sound = domain.custom_sound_down or domain.custom_sound or "default_down"
+        # Use custom_sound_down if set, otherwise default
+        # Ignore the deprecated custom_sound field
+        raw_sound = domain.custom_sound_down if domain.custom_sound_down else "default_down"
         sound_name = normalize_sound_name(raw_sound)
-        logger.info(f"🔊 Using sound for DOWN notification: {sound_name} (raw={raw_sound}, custom_sound_down={domain.custom_sound_down}, custom_sound={domain.custom_sound})")
+        logger.info(f"🔊 DOWN notification sound: {sound_name} (custom_sound_down={domain.custom_sound_down})")
         
         notification_results = send_to_all_devices(
             devices=devices,
@@ -144,11 +144,11 @@ def domain_up(payload: UpEvent, db: Session = Depends(get_db)):
         
         devices = db.query(DeviceToken).all()
         
-        # Use custom sound if specified, otherwise use default
-        # Normalize sound name (remove extension if present)
-        raw_sound = domain.custom_sound_up or domain.custom_sound or "default_up"
+        # Use custom_sound_up if set, otherwise default
+        # Ignore the deprecated custom_sound field
+        raw_sound = domain.custom_sound_up if domain.custom_sound_up else "default_up"
         sound_name = normalize_sound_name(raw_sound)
-        logger.info(f"🔊 Using sound for UP notification: {sound_name} (raw={raw_sound}, custom_sound_up={domain.custom_sound_up}, custom_sound={domain.custom_sound})")
+        logger.info(f"🔊 UP notification sound: {sound_name} (custom_sound_up={domain.custom_sound_up})")
         
         notification_results = send_to_all_devices(
             devices=devices,
