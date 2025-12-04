@@ -105,7 +105,9 @@ def get_domain_analytics(db: Session, domain_id: int, days: int = 7):
     
     if days == 1:
         # Hourly data for 24-hour view
+        from datetime import timezone
         now = datetime.now()
+        
         for i in range(24):
             hour_start = now.replace(minute=0, second=0, microsecond=0) - timedelta(hours=23-i)
             hour_end = hour_start + timedelta(hours=1)
@@ -113,8 +115,11 @@ def get_domain_analytics(db: Session, domain_id: int, days: int = 7):
             # Find logs that overlap with this hour
             hour_logs = []
             for log in logs:
-                log_start = log.start_time
-                log_end = log.end_time if log.end_time else datetime.now()
+                # Handle timezone-aware datetimes
+                log_start = log.start_time.replace(tzinfo=None) if log.start_time.tzinfo else log.start_time
+                log_end = log.end_time.replace(tzinfo=None) if log.end_time and log.end_time.tzinfo else (log.end_time if log.end_time else now)
+                if log_end is None:
+                    log_end = now
                 
                 # Check if log overlaps with this hour
                 if log_start < hour_end and log_end > hour_start:
@@ -122,7 +127,8 @@ def get_domain_analytics(db: Session, domain_id: int, days: int = 7):
                     overlap_start = max(log_start, hour_start)
                     overlap_end = min(log_end, hour_end)
                     overlap_seconds = (overlap_end - overlap_start).total_seconds()
-                    hour_logs.append((log, overlap_seconds))
+                    if overlap_seconds > 0:
+                        hour_logs.append((log, overlap_seconds))
             
             # Calculate downtime for this hour (in seconds)
             hour_downtime = sum(overlap_seconds for _, overlap_seconds in hour_logs)
