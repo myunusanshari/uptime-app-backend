@@ -100,25 +100,60 @@ def get_domain_analytics(db: Session, domain_id: int, days: int = 7):
     uptime_seconds = total_period_seconds - total_downtime
     uptime_percentage = (uptime_seconds / total_period_seconds) * 100 if total_period_seconds > 0 else 100
     
-    # Build daily stats from logs - specified days back from today
+    # Build stats - hourly for 24h view, daily for others
     daily_stats = []
-    for i in range(days):
-        day = start_date + timedelta(days=i)  # From start_date to today
-        # Use date() to compare dates, handling timezone-aware datetimes
-        day_logs = [l for l in logs if l.start_time.date() == day]
-        
-        # Calculate uptime for this day (1440 minutes per day)
-        day_total_minutes = 24 * 60
-        day_downtime_minutes = sum((l.duration_seconds or 0) for l in day_logs) / 60
-        day_uptime_minutes = day_total_minutes - day_downtime_minutes
-        
-        daily_stats.append({
-            "date": day.isoformat(),
-            "incidents": len(day_logs),
-            "total_downtime": sum((l.duration_seconds or 0) for l in day_logs),
-            "uptime_minutes": round(day_uptime_minutes, 2),
-            "downtime_minutes": round(day_downtime_minutes, 2),
-        })
+    
+    if days == 1:
+        # Hourly data for 24-hour view
+        now = datetime.now()
+        for i in range(24):
+            hour_start = now.replace(minute=0, second=0, microsecond=0) - timedelta(hours=23-i)
+            hour_end = hour_start + timedelta(hours=1)
+            
+            # Find logs that overlap with this hour
+            hour_logs = []
+            for log in logs:
+                log_start = log.start_time
+                log_end = log.end_time if log.end_time else datetime.now()
+                
+                # Check if log overlaps with this hour
+                if log_start < hour_end and log_end > hour_start:
+                    # Calculate overlap duration
+                    overlap_start = max(log_start, hour_start)
+                    overlap_end = min(log_end, hour_end)
+                    overlap_seconds = (overlap_end - overlap_start).total_seconds()
+                    hour_logs.append((log, overlap_seconds))
+            
+            # Calculate downtime for this hour (in seconds)
+            hour_downtime = sum(overlap_seconds for _, overlap_seconds in hour_logs)
+            hour_total_seconds = 60 * 60  # 3600 seconds per hour
+            hour_uptime = hour_total_seconds - hour_downtime
+            
+            daily_stats.append({
+                "date": hour_start.strftime("%H:%M"),  # Format as "HH:MM"
+                "incidents": len(set(log.id for log, _ in hour_logs)),
+                "total_downtime": int(hour_downtime),
+                "uptime_minutes": round(hour_uptime / 60, 2),
+                "downtime_minutes": round(hour_downtime / 60, 2),
+            })
+    else:
+        # Daily data for 7-day and 30-day views
+        for i in range(days):
+            day = start_date + timedelta(days=i)
+            day_logs = [l for l in logs if l.start_time.date() == day]
+            
+            # Calculate uptime for this day (1440 minutes per day)
+            day_total_minutes = 24 * 60
+            day_downtime_minutes = sum((l.duration_seconds or 0) for l in day_logs) / 60
+            day_uptime_minutes = day_total_minutes - day_downtime_minutes
+            
+            daily_stats.append({
+                "date": day.isoformat(),
+                "incidents": len(day_logs),
+                "total_downtime": sum((l.duration_seconds or 0) for l in day_logs),
+                "uptime_minutes": round(day_uptime_minutes, 2),
+                "downtime_minutes": round(day_downtime_minutes, 2),
+            })
     
     # Log for debugging
     print(f"📊 Generated analytics for domain {domain_id} ({days} days)")
