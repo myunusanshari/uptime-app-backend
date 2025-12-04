@@ -58,7 +58,7 @@ def domain_down(payload: DownEvent, db: Session = Depends(get_db)):
             title=f"🔴 {domain_name} DOWN",
             body=f"{domain_label} ({domain_name}) is currently unreachable",
             sound=sound_name,  # Use domain's custom sound or default
-            channel_id="downtime_v3",  # Use downtime channel
+            channel_id="downtime_v4",  # Use v4 channel (no hardcoded sound)
             data={
                 "type": "down",
                 "domain_name": domain_name,
@@ -155,7 +155,7 @@ def domain_up(payload: UpEvent, db: Session = Depends(get_db)):
             title=f"✅ {domain_name} RECOVERED",
             body=f"{domain_label} ({domain_name}) is back online after {duration_text}",
             sound=sound_name,  # Use domain's custom sound or default
-            channel_id="uptime_v3",  # Use uptime channel
+            channel_id="uptime_v4",  # Use v4 channel (no hardcoded sound)
             data={
                 "type": "up",
                 "domain_name": domain_name,
