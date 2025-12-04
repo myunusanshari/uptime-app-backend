@@ -57,7 +57,11 @@ def send_fcm(to: str, title: str, body: str, sound="default", data=None, channel
         else:
             data = {}
         
-        logger.info(f"Preparing FCM with data: {data}")
+        logger.info(f"📤 Preparing FCM notification:")
+        logger.info(f"  → Title: {title}")
+        logger.info(f"  → Sound: {sound}")
+        logger.info(f"  → Channel ID: {channel_id}")
+        logger.info(f"  → Data payload: {data}")
         
         # Determine if it's a topic or device token
         if to.startswith("/topics/"):
