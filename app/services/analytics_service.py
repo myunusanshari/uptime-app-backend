@@ -35,15 +35,19 @@ def get_today_stats(db: Session):
     }
 
 
-def get_domain_analytics(db: Session, domain_id: int):
+def get_domain_analytics(db: Session, domain_id: int, days: int = 7):
+    """
+    Get analytics for a domain over specified time range
+    days: 1 (24 hours), 7 (week), 30 (month)
+    """
     today = date.today()
-    seven_days_ago = today - timedelta(days=6)  # Today + 6 days back = 7 days total
+    start_date = today - timedelta(days=days-1)  # Today + (days-1) back = total days
     tomorrow = today + timedelta(days=1)  # Include future dates in case of timezone issues
 
     # Fetch all logs for the period - use wider date range for timezone safety
     logs = db.query(DowntimeLog).filter(
         DowntimeLog.domain_id == domain_id,
-        DowntimeLog.start_time >= seven_days_ago - timedelta(days=1),  # Extra buffer
+        DowntimeLog.start_time >= start_date - timedelta(days=1),  # Extra buffer
         DowntimeLog.start_time <= tomorrow  # Include tomorrow for timezone issues
     ).order_by(DowntimeLog.start_time.asc()).all()
     
@@ -91,15 +95,15 @@ def get_domain_analytics(db: Session, domain_id: int):
         print(f"   MTBF (single incident): {mtbf}s")
     
     # Calculate uptime percentage for the period
-    # Total period in seconds (7 days = 604800 seconds)
-    total_period_seconds = 7 * 24 * 60 * 60
+    # Total period in seconds (days * 24 * 60 * 60)
+    total_period_seconds = days * 24 * 60 * 60
     uptime_seconds = total_period_seconds - total_downtime
     uptime_percentage = (uptime_seconds / total_period_seconds) * 100 if total_period_seconds > 0 else 100
     
-    # Build daily stats from logs - 7 hari ke belakang dari hari ini
+    # Build daily stats from logs - specified days back from today
     daily_stats = []
-    for i in range(7):
-        day = seven_days_ago + timedelta(days=i)  # 7 hari ke belakang sampai hari ini
+    for i in range(days):
+        day = start_date + timedelta(days=i)  # From start_date to today
         # Use date() to compare dates, handling timezone-aware datetimes
         day_logs = [l for l in logs if l.start_time.date() == day]
         
@@ -117,8 +121,8 @@ def get_domain_analytics(db: Session, domain_id: int):
         })
     
     # Log for debugging
-    print(f"📊 Generated analytics for domain {domain_id}")
-    print(f"   Range: {seven_days_ago} to {today}")
+    print(f"📊 Generated analytics for domain {domain_id} ({days} days)")
+    print(f"   Range: {start_date} to {today}")
     print(f"   Total incidents: {total_incidents}")
     print(f"   Total downtime: {total_downtime}s")
     print(f"   MTTR: {mttr}s ({mttr/60:.1f} minutes)")
