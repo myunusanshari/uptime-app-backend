@@ -45,11 +45,15 @@ def domain_down(payload: DownEvent, db: Session = Depends(get_db)):
 
         # Send notification to all devices
         devices = db.query(DeviceToken).all()
+        
+        # Use custom sound if specified, otherwise use default
+        sound_name = domain.custom_sound_down or domain.custom_sound or "default_down"
+        
         notification_results = send_to_all_devices(
             devices=devices,
             title=f"🔴 {domain_name} DOWN",
             body=f"{domain_label} ({domain_name}) is currently unreachable",
-            sound="default_down",  # Custom sound for downtime
+            sound=sound_name,  # Use domain's custom sound or default
             channel_id="downtime_v3",  # Use downtime channel
             data={
                 "type": "down",
@@ -134,11 +138,15 @@ def domain_up(payload: UpEvent, db: Session = Depends(get_db)):
             duration_text = f"{hours}h {minutes}m"
         
         devices = db.query(DeviceToken).all()
+        
+        # Use custom sound if specified, otherwise use default
+        sound_name = domain.custom_sound_up or domain.custom_sound or "default_up"
+        
         notification_results = send_to_all_devices(
             devices=devices,
             title=f"✅ {domain_name} RECOVERED",
             body=f"{domain_label} ({domain_name}) is back online after {duration_text}",
-            sound="default_up",  # Custom sound for recovery
+            sound=sound_name,  # Use domain's custom sound or default
             channel_id="uptime_v3",  # Use uptime channel
             data={
                 "type": "up",

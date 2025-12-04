@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import logging
-from .routers import domains, events, devices
+from .routers import domains, events, devices, sounds
 from .routers import analytics
 from .middleware import api_key_middleware, rate_limit_middleware, logging_middleware
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -139,6 +139,7 @@ app.include_router(domains.router, prefix="/domains", tags=["Domains"])
 app.include_router(events.router, prefix="/events", tags=["Events"])
 app.include_router(devices.router, prefix="/devices", tags=["Devices"])
 app.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
+app.include_router(sounds.router, prefix="/sounds", tags=["Sounds"])
 
 @app.get("/")
 def root():

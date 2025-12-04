@@ -4,7 +4,9 @@ from datetime import datetime
 class DomainBase(BaseModel):
     name: str
     label: str | None = None
-    custom_sound: str | None = None
+    custom_sound: str | None = None  # Deprecated - kept for backward compatibility
+    custom_sound_down: str | None = None  # Custom sound filename for downtime alerts
+    custom_sound_up: str | None = None  # Custom sound filename for recovery alerts
     sensitivity: int = 0
     ssl_enabled: bool = True
 

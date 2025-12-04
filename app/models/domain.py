@@ -8,7 +8,9 @@ class Domain(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     label = Column(String, nullable=True)
-    custom_sound = Column(String, nullable=True)
+    custom_sound = Column(String, nullable=True)  # Deprecated - kept for backward compatibility
+    custom_sound_down = Column(String, nullable=True)  # Custom sound for downtime notifications
+    custom_sound_up = Column(String, nullable=True)  # Custom sound for recovery notifications
     is_active = Column(Boolean, default=True)
     sensitivity = Column(Integer, default=0)  # minimum downtime (seconds) before notify
     
