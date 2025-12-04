@@ -6,6 +6,7 @@ from ..models.device_token import DeviceToken
 from ..schemas.event import DownEvent, UpEvent
 from ..dependencies import get_db
 from ..services.notification_service import send_to_all_devices
+from ..utils.sound_utils import normalize_sound_name
 import logging
 
 router = APIRouter()
@@ -47,8 +48,10 @@ def domain_down(payload: DownEvent, db: Session = Depends(get_db)):
         devices = db.query(DeviceToken).all()
         
         # Use custom sound if specified, otherwise use default
-        sound_name = domain.custom_sound_down or domain.custom_sound or "default_down"
-        logger.info(f"🔊 Using sound for DOWN notification: {sound_name} (custom_sound_down={domain.custom_sound_down}, custom_sound={domain.custom_sound})")
+        # Normalize sound name (remove extension if present)
+        raw_sound = domain.custom_sound_down or domain.custom_sound or "default_down"
+        sound_name = normalize_sound_name(raw_sound)
+        logger.info(f"🔊 Using sound for DOWN notification: {sound_name} (raw={raw_sound}, custom_sound_down={domain.custom_sound_down}, custom_sound={domain.custom_sound})")
         
         notification_results = send_to_all_devices(
             devices=devices,
@@ -142,8 +145,10 @@ def domain_up(payload: UpEvent, db: Session = Depends(get_db)):
         devices = db.query(DeviceToken).all()
         
         # Use custom sound if specified, otherwise use default
-        sound_name = domain.custom_sound_up or domain.custom_sound or "default_up"
-        logger.info(f"🔊 Using sound for UP notification: {sound_name} (custom_sound_up={domain.custom_sound_up}, custom_sound={domain.custom_sound})")
+        # Normalize sound name (remove extension if present)
+        raw_sound = domain.custom_sound_up or domain.custom_sound or "default_up"
+        sound_name = normalize_sound_name(raw_sound)
+        logger.info(f"🔊 Using sound for UP notification: {sound_name} (raw={raw_sound}, custom_sound_up={domain.custom_sound_up}, custom_sound={domain.custom_sound})")
         
         notification_results = send_to_all_devices(
             devices=devices,
