@@ -90,26 +90,30 @@ def send_fcm(to: str, title: str, body: str, sound="default", data=None, channel
                 )
             )
         else:
-            # Device token
+            # Device token - Send as DATA-ONLY message for custom sounds
+            # Android notification channels ignore FCM notification sound,
+            # so we send data-only and let the app handle the notification
+            data_with_notification = data.copy() if data else {}
+            data_with_notification.update({
+                'title': title,
+                'body': body,
+                'sound': sound,
+                'channel_id': channel_id,
+            })
+            
             message = messaging.Message(
-                notification=messaging.Notification(
-                    title=title,
-                    body=body,
-                ),
-                data=data,
+                # NO notification payload - data only
+                data=data_with_notification,
                 token=to,
                 android=messaging.AndroidConfig(
                     priority='high',
-                    notification=messaging.AndroidNotification(
-                        sound=sound,
-                        priority='high',
-                        channel_id=channel_id,  # Required for custom sounds
-                    )
+                    # No AndroidNotification - data-only message
                 ),
                 apns=messaging.APNSConfig(
                     payload=messaging.APNSPayload(
                         aps=messaging.Aps(
                             sound=sound,
+                            badge=1,
                         )
                     )
                 )
